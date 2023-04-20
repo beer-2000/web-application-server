@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -72,6 +73,19 @@ public class HttpRequestUtils {
         String url = headerLines.get(0).split(" ")[1];
         System.out.println("url : " + url);
         return url;
+    }
+
+    public static Map<String, String> getUrlInformationFromUrl(String url) {
+        Map<String, String> urlInformation = new HashMap<>();
+        String[] pathAndParams = url.split("\\?");
+        String path = pathAndParams[0];
+        urlInformation.put("path", path);
+        String params;
+        if (pathAndParams.length > 1) {
+            params = pathAndParams[1];
+            urlInformation.put("params", params);
+        }
+        return urlInformation;
     }
 
     public static class Pair {

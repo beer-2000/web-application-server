@@ -1,6 +1,11 @@
 package model;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class User {
+    private static final List<User> users = new ArrayList<>();
+
     private String userId;
     private String password;
     private String name;
@@ -11,6 +16,10 @@ public class User {
         this.password = password;
         this.name = name;
         this.email = email;
+    }
+
+    public static void save(User user) {
+        users.add(user);
     }
 
     public String getUserId() {

@@ -13,6 +13,8 @@ import java.net.Socket;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import model.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import util.HttpRequestUtils;
@@ -31,14 +33,28 @@ public class RequestHandler extends Thread {
                 connection.getPort());
 
         try (InputStream in = connection.getInputStream(); OutputStream out = connection.getOutputStream()) {
-            // TODO 사용자 요청에 대한 처리는 이 곳에 구현하면 된다.
             String url = HttpRequestUtils.getUrlFromRequestInput(in);
+            Map<String, String> urlInformation = HttpRequestUtils.getUrlInformationFromUrl(url);
 
-            DataOutputStream dos = new DataOutputStream(out);
-            byte[] body = Files.readAllBytes(new File("./webapp" + url).toPath());
-//            byte[] body = "Hello World".getBytes();
-            response200Header(dos, body.length);
-            responseBody(dos, body);
+            if (urlInformation.get("path").contains(".html")) {
+                DataOutputStream dos = new DataOutputStream(out);
+                byte[] body = Files.readAllBytes(new File("./webapp" + url).toPath());
+                response200Header(dos, body.length);
+                responseBody(dos, body);
+                return;
+            }
+
+            if (urlInformation.get("path").equals("/user/create")) {
+                Map<String, String> paramsMap = HttpRequestUtils.parseQueryString(urlInformation.get("params"));
+                System.out.println(paramsMap);
+                User.save(new User(
+                        paramsMap.get("userId"),
+                        paramsMap.get("password"),
+                        paramsMap.get("name"),
+                        paramsMap.get("email")
+                ));
+            }
+
         } catch (IOException e) {
             log.error(e.getMessage());
         }
