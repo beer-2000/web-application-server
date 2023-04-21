@@ -60,32 +60,45 @@ public class HttpRequestUtils {
         return getKeyValue(header, ": ");
     }
 
-    public static String getUrlFromRequestInput(InputStream in) throws IOException {
+    public static Map<String, String> getRequestInformation(InputStream in) throws IOException {
         BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(in));
+        Map<String, String> requestInformation = new HashMap<>();
         String headerLine;
-        List<String> headerLines = new ArrayList<>();
+
+        headerLine = bufferedReader.readLine();
+        requestInformation.put("Method", headerLine.split(" ")[0]);
+        requestInformation.put("Url", headerLine.split(" ")[1]);
+
         do {
             headerLine = bufferedReader.readLine();
-            headerLines.add(headerLine);
-            System.out.println(headerLine);
-        } while (!headerLine.isEmpty());
+            if (headerLine.isEmpty()) {
+                break;
+            }
+            requestInformation.put(headerLine.split(": ")[0], headerLine.split(": ")[1]);
+        } while (true);
 
-        String url = headerLines.get(0).split(" ")[1];
-        System.out.println("url : " + url);
-        return url;
+        addPathAndParamsToRequestInformation(requestInformation);
+
+        if (requestInformation.get("Method").equals("POST")) {
+            String requestBody = IOUtils.readData(bufferedReader,
+                    Integer.parseInt(requestInformation.get("Content-Length")));
+            requestInformation.put("Request-Body", requestBody);
+        }
+
+        System.out.println();
+        return requestInformation;
     }
 
-    public static Map<String, String> getUrlInformationFromUrl(String url) {
-        Map<String, String> urlInformation = new HashMap<>();
+    private static void addPathAndParamsToRequestInformation(Map<String, String> requestInformation) {
+        String url = requestInformation.get("Url");
         String[] pathAndParams = url.split("\\?");
         String path = pathAndParams[0];
-        urlInformation.put("path", path);
+        requestInformation.put("Path", path);
         String params;
         if (pathAndParams.length > 1) {
             params = pathAndParams[1];
-            urlInformation.put("params", params);
+            requestInformation.put("Params", params);
         }
-        return urlInformation;
     }
 
     public static class Pair {

@@ -7,17 +7,17 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.io.Reader;
 import java.net.Socket;
 
 import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
 import model.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import util.HttpRequestUtils;
+import util.IOUtils;
 
 public class RequestHandler extends Thread {
     private static final Logger log = LoggerFactory.getLogger(RequestHandler.class);
@@ -33,26 +33,31 @@ public class RequestHandler extends Thread {
                 connection.getPort());
 
         try (InputStream in = connection.getInputStream(); OutputStream out = connection.getOutputStream()) {
-            String url = HttpRequestUtils.getUrlFromRequestInput(in);
-            Map<String, String> urlInformation = HttpRequestUtils.getUrlInformationFromUrl(url);
+            Map<String, String> requestInformation = HttpRequestUtils.getRequestInformation(in);
 
-            if (urlInformation.get("path").contains(".html")) {
-                DataOutputStream dos = new DataOutputStream(out);
-                byte[] body = Files.readAllBytes(new File("./webapp" + url).toPath());
-                response200Header(dos, body.length);
-                responseBody(dos, body);
+            if (requestInformation.get("Path").contains(".html")) {
+                System.out.println(">>>>>>>>>>> Request Informaion");
+                System.out.println(requestInformation);
+                openHtml(out, requestInformation.get("Path"));
                 return;
             }
 
-            if (urlInformation.get("path").equals("/user/create")) {
-                Map<String, String> paramsMap = HttpRequestUtils.parseQueryString(urlInformation.get("params"));
-                System.out.println(paramsMap);
+            if (requestInformation.get("Path").equals("/user/create")
+                && requestInformation.get("Method").equals("POST")) {
+                System.out.println(">>>>>>>>>>> Request Informaion");
+                System.out.println(requestInformation);
+                Map<String, String> requestBodyTable = new HashMap<>();
+                for (String keyAndValue : requestInformation.get("Request-Body").split("&")) {
+                    requestBodyTable.put(keyAndValue.split("=")[0], keyAndValue.split("=")[1]);
+                }
                 User.save(new User(
-                        paramsMap.get("userId"),
-                        paramsMap.get("password"),
-                        paramsMap.get("name"),
-                        paramsMap.get("email")
+                        requestBodyTable.get("userId"),
+                        requestBodyTable.get("password"),
+                        requestBodyTable.get("name"),
+                        requestBodyTable.get("email")
                 ));
+                User.readConsole();
+                openHtml(out, "/index.html");
             }
 
         } catch (IOException e) {
@@ -60,6 +65,12 @@ public class RequestHandler extends Thread {
         }
     }
 
+    private void openHtml(OutputStream out, String path) throws IOException {
+        DataOutputStream dos = new DataOutputStream(out);
+        byte[] body = Files.readAllBytes(new File("./webapp" + path).toPath());
+        response200Header(dos, body.length);
+        responseBody(dos, body);
+    }
 
 
     private void response200Header(DataOutputStream dos, int lengthOfBodyContent) {

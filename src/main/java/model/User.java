@@ -22,6 +22,12 @@ public class User {
         users.add(user);
     }
 
+    public static void readConsole() {
+        for (User user : users) {
+            System.out.println(user);
+        }
+    }
+
     public String getUserId() {
         return userId;
     }
