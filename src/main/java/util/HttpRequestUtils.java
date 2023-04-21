@@ -63,12 +63,13 @@ public class HttpRequestUtils {
     public static Map<String, String> getRequestInformation(InputStream in) throws IOException {
         BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(in));
         Map<String, String> requestInformation = new HashMap<>();
+
+        String headerLineOfRequestMethodAndPath = bufferedReader.readLine();
+        System.out.println(headerLineOfRequestMethodAndPath);
+        requestInformation.put("Method", headerLineOfRequestMethodAndPath.split(" ")[0]);
+        requestInformation.put("Url", headerLineOfRequestMethodAndPath.split(" ")[1]);
+
         String headerLine;
-
-        headerLine = bufferedReader.readLine();
-        requestInformation.put("Method", headerLine.split(" ")[0]);
-        requestInformation.put("Url", headerLine.split(" ")[1]);
-
         do {
             headerLine = bufferedReader.readLine();
             if (headerLine.isEmpty()) {

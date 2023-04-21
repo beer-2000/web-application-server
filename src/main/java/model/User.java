@@ -1,10 +1,10 @@
 package model;
 
+import db.DataBase;
 import java.util.ArrayList;
 import java.util.List;
 
 public class User {
-    private static final List<User> users = new ArrayList<>();
 
     private String userId;
     private String password;
@@ -19,13 +19,7 @@ public class User {
     }
 
     public static void save(User user) {
-        users.add(user);
-    }
-
-    public static void readConsole() {
-        for (User user : users) {
-            System.out.println(user);
-        }
+        DataBase.addUser(user);
     }
 
     public String getUserId() {
